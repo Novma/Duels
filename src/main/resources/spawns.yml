@@ -1,0 +1,6 @@
+#in this file will be saved the spawn points for the duels
+#every field has 2 spawn points, one for player
+
+two-players:
+  - first: [0,0,0,0,0]
+    second: [10,0,10,180,0]

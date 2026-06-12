@@ -1,0 +1,24 @@
+# name of the world for duels
+world-name: test
+# name of the world to tp when duels end
+end-world-name: test
+
+# debug mode
+debug: false
+
+# error messages
+messages:
+  # the player cannot participate in a duel because they already have a pending duel
+  cannot-participate: "You cannot enter a duel because you already have a pending duel"
+  # the player cannot create a new duel because they already have a pending duel (public or private)
+  cannot-create: "You cannot create a duel if you already have a pending duel"
+  # the duel in the GUI no longer exists
+  old-gui: "This duel no longer exists, try reopening the GUI"
+  # there is no arena available at the moment
+  no-spawn: "All arenas are full at the moment"
+  # the player doesn't have the prize money
+  no-money: "Your duel has been accepted but you don't have the prize money"
+  # the other player doesn't have the prize money
+  other-no-money: "Your challenger doesn't have the prize money"
+  # the player has accepted a private duel that's not for them
+  no-duel: "You don'y have a private duel with this challenger"

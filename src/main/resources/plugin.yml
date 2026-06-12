@@ -1,6 +1,28 @@
 name: Duels
 version: '${version}'
 
-main: io.github.Novma.duels.Duels
+main: io.github.Novma.duels.DuelsPlugin
 api-version: '1.21.4'
 load: POSTWORLD
+
+depend: [Vault]
+
+commands:
+  duel:
+    description: Open duels GUI
+    usage:
+    permission: duels.gui
+
+permissions:
+  duels.gui:
+    default: op
+  duels.create:
+    default: op
+  duels.join:
+    default: op
+  duels.invite:
+    default: op
+  duels.accept:
+    default: op
+  duels.reload:
+    default: op

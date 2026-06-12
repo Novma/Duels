@@ -1,4 +1,168 @@
 package io.github.Novma.duels.duel;
 
+import io.github.Novma.duels.DuelsPlugin;
+import io.github.Novma.duels.util.FileManager;
+import io.github.Novma.duels.util.Logger;
+import net.kyori.adventure.text.Component;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class DuelsManager {
+    private final SpawnManager spawnManager;
+    private final List<Duel> activeDuels;
+    private final List<Duel> pendingDuels;
+
+    public DuelsManager(SpawnManager spawnManager) {
+        this.spawnManager = spawnManager;
+        activeDuels = new ArrayList<>();
+        pendingDuels = new ArrayList<>();
+    }
+
+    public void add(Player player1, Player player2, int prize) {
+        // check if player1 has a duel
+        if (getPendingDuelFromPlayer1(player1) != null) {
+            player1.sendMessage(Component.text(FileManager.getMessage("cannot-create")));
+        }
+        // add duel
+        pendingDuels.add(new Duel(player1, player2, prize));
+    }
+
+    public void accept(Player player1, Player player2) {
+        // check if player2 has a duel
+        if (getPendingDuelFromPlayer1(player2) != null) {
+            player2.sendMessage(Component.text(FileManager.getMessage("cannot-participate")));
+            return;
+        }
+        // get duel from player1
+        Duel duel = getPendingDuelFromPlayer1(player1);
+        if (duel == null) {
+            player2.sendMessage(Component.text(FileManager.getMessage("old-gui")));
+            return;
+        }
+        Player challenger = duel.getPlayer2();
+        if (challenger != null) {
+            if (!challenger.getUniqueId().equals(player2.getUniqueId())) {
+                player2.sendMessage(Component.text(FileManager.getMessage("no-duel")));
+                return;
+            }
+        }
+        // check balance
+        Economy econ = DuelsPlugin.getEconomy();
+        if (econ.has(player1, duel.getPrize())) {
+            player1.sendMessage(Component.text(FileManager.getMessage("no-money")));
+            player2.sendMessage(Component.text(FileManager.getMessage("other-no-money")));
+            return;
+        }
+        if (econ.has(player2, duel.getPrize())) {
+            player1.sendMessage(Component.text(FileManager.getMessage("other-no-money")));
+            player2.sendMessage(Component.text(FileManager.getMessage("no-money")));
+            return;
+        }
+        // check if arena free
+        SpawnManager.SpawnPair spawn = spawnManager.getSpawnPair(activeDuels.size());
+        if (spawn == null) {
+            player1.sendMessage(Component.text(FileManager.getMessage("no-spawn")));
+            player2.sendMessage(Component.text(FileManager.getMessage("no-spawn")));
+            return;
+        }
+        // start duel
+        duel.setPlayer2(player2);
+        pendingDuels.remove(duel);
+        activeDuels.add(duel);
+
+        econ.withdrawPlayer(player1, duel.getPrize());
+        econ.withdrawPlayer(player2, duel.getPrize());
+
+        player1.heal(40);
+        player2.heal(40);
+
+        player1.teleportAsync(spawn.first());
+        player2.teleportAsync(spawn.second());
+    }
+
+    public void endDuel(Player winner, Player loser) {
+        // get duel
+        Duel duel = getActiveDuelFromPlayer1(winner);
+        if (duel == null) {
+            duel = getPendingDuelFromPlayer1(winner);
+            if (duel == null) {
+                Logger.severe("No active duel!");
+                return;
+            }
+        }
+        // give prize
+        Economy econ = DuelsPlugin.getEconomy();
+        econ.depositPlayer(winner, duel.getPrize() * 2);
+        // end duel
+        activeDuels.remove(duel);
+        World world = Bukkit.getWorld(FileManager.getEndWorldName());
+        if (world == null) {
+            Logger.severe("End world not found!");
+            return;
+        }
+        winner.teleportAsync(world.getSpawnLocation());
+        loser.teleportAsync(world.getSpawnLocation());
+    }
+
+    private Duel getActiveDuelFromPlayer1(Player player) {
+        for (Duel duel : activeDuels) {
+            if (duel.getPlayer1().getUniqueId().equals(player.getUniqueId())) {
+                return duel;
+            }
+        }
+        return null;
+    }
+
+    private Duel getActiveDuelFromPlayer2(Player player) {
+        for (Duel duel : activeDuels) {
+            if (duel.getPlayer2().getUniqueId().equals(player.getUniqueId())) {
+                return duel;
+            }
+        }
+        return null;
+    }
+
+    private Duel getPendingDuelFromPlayer1(Player player) {
+        for (Duel duel : pendingDuels) {
+            if (duel.getPlayer1().getUniqueId().equals(player.getUniqueId())) {
+                return duel;
+            }
+        }
+        return null;
+    }
+
+    private List<Duel> getPendingDuelFromPlayer2(Player player) {
+        List<Duel> duels = new ArrayList<>();
+        for (Duel duel : pendingDuels) {
+            if (duel.getPlayer2().getUniqueId().equals(player.getUniqueId())) {
+                duels.add(duel);
+            }
+        }
+        return duels;
+    }
+
+    public List<Duel> getPublicDuels() {
+        List<Duel> publicDuels = new ArrayList<>();
+        for (Duel duel : pendingDuels) {
+            if (duel.getPlayer2() == null) {
+                publicDuels.add(duel);
+            }
+        }
+        return publicDuels;
+    }
+
+    public List<Duel> getPrivateDuels() {
+        List<Duel> privateDuels = new ArrayList<>();
+        for (Duel duel : pendingDuels) {
+            if (duel.getPlayer2() != null) {
+                privateDuels.add(duel);
+            }
+        }
+        return privateDuels;
+    }
 }

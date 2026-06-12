@@ -1,4 +1,4 @@
-package io.github.Novma.duels;
+package io.github.Novma.duels.duel;
 
 import io.github.Novma.duels.util.FileManager;
 import io.github.Novma.duels.util.Logger;
@@ -12,6 +12,7 @@ import java.util.Map;
 
 public class SpawnManager {
     private List<SpawnPair> spawnLocations;
+    private World world;
 
     public SpawnManager() {
         load();
@@ -20,7 +21,7 @@ public class SpawnManager {
     public void load() {
         spawnLocations = new ArrayList<>();
 
-        World world = Bukkit.getWorld(FileManager.getWorldName());
+        world = Bukkit.getWorld(FileManager.getWorldName());
         if (world == null) {
             Logger.severe("World not found!");
             return;
@@ -47,6 +48,17 @@ public class SpawnManager {
 
             spawnLocations.add(new SpawnPair(loc1, loc2));
         }
+    }
+
+    public SpawnPair getSpawnPair(int n) {
+        if (n >= spawnLocations.size()) {
+            return null;
+        }
+        return spawnLocations.get(n);
+    }
+
+    public World getWorld() {
+        return world;
     }
 
     public record SpawnPair(Location first, Location second) {}

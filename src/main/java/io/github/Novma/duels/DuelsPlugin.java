@@ -1,8 +1,11 @@
 package io.github.Novma.duels;
 
+import io.github.Novma.duels.command.CommandDuel;
 import io.github.Novma.duels.duel.DuelsManager;
 import io.github.Novma.duels.duel.SpawnManager;
+import io.github.Novma.duels.gui.GUIsManager;
 import io.github.Novma.duels.listener.DeathListener;
+import io.github.Novma.duels.listener.GUIListener;
 import io.github.Novma.duels.util.FileManager;
 import io.github.Novma.duels.util.Logger;
 import net.milkbowl.vault.economy.Economy;
@@ -10,12 +13,15 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
+
 public final class DuelsPlugin extends JavaPlugin {
     private static Plugin instance;
     private FileManager fileManager;
     private SpawnManager spawnManager;
     private DuelsManager duelsManager;
     private static Economy econ;
+    private GUIsManager guiManager;
 
     @Override
     public void onEnable() {
@@ -30,8 +36,12 @@ public final class DuelsPlugin extends JavaPlugin {
 
         spawnManager = new SpawnManager();
         duelsManager = new DuelsManager(spawnManager);
+        guiManager = new GUIsManager(duelsManager);
 
         getServer().getPluginManager().registerEvents(new DeathListener(spawnManager, duelsManager), this);
+        getServer().getPluginManager().registerEvents(new GUIListener(guiManager), this);
+
+        Objects.requireNonNull(getCommand("duel")).setExecutor(new CommandDuel(guiManager));
     }
 
     @Override

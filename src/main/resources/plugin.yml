@@ -11,10 +11,9 @@ commands:
   duel:
     description: Open duels GUI
     usage:
-    permission: duels.gui
 
 permissions:
-  duels.gui:
+  duels.open:
     default: op
   duels.create:
     default: op

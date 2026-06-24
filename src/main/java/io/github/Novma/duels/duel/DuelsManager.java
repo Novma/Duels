@@ -9,37 +9,36 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class DuelsManager {
     private final SpawnManager spawnManager;
-    private final List<Duel> activeDuels;
-    private final List<Duel> pendingDuels;
+    private final Map<UUID, Duel> activeDuels;
+    private final Map<UUID, Duel> pendingDuels;
 
     public DuelsManager(SpawnManager spawnManager) {
         this.spawnManager = spawnManager;
-        activeDuels = new ArrayList<>();
-        pendingDuels = new ArrayList<>();
+        activeDuels = new HashMap<>();
+        pendingDuels = new HashMap<>();
     }
 
     public void add(Player player1, Player player2, int prize) {
         // check if player1 has a duel
-        if (getPendingDuelFromPlayer1(player1) != null) {
+        if (getPendingDuel(player1) != null) {
             player1.sendMessage(Component.text(FileManager.getMessage("cannot-create")));
         }
         // add duel
-        pendingDuels.add(new Duel(player1, player2, prize));
+        pendingDuels.put(player1.getUniqueId(), new Duel(player1, player2, prize));
     }
 
     public void accept(Player player1, Player player2) {
         // check if player2 has a duel
-        if (getPendingDuelFromPlayer1(player2) != null) {
+        if (getPendingDuel(player2) != null) {
             player2.sendMessage(Component.text(FileManager.getMessage("cannot-participate")));
             return;
         }
         // get duel from player1
-        Duel duel = getPendingDuelFromPlayer1(player1);
+        Duel duel = getPendingDuel(player1);
         if (duel == null) {
             player2.sendMessage(Component.text(FileManager.getMessage("old-gui")));
             return;
@@ -72,8 +71,8 @@ public class DuelsManager {
         }
         // start duel
         duel.setPlayer2(player2);
-        pendingDuels.remove(duel);
-        activeDuels.add(duel);
+        pendingDuels.remove(player1.getUniqueId());
+        activeDuels.put(player1.getUniqueId(), duel);
 
         econ.withdrawPlayer(player1, duel.getPrize());
         econ.withdrawPlayer(player2, duel.getPrize());
@@ -87,9 +86,9 @@ public class DuelsManager {
 
     public void endDuel(Player winner, Player loser) {
         // get duel
-        Duel duel = getActiveDuelFromPlayer1(winner);
+        Duel duel = getActiveDuel(winner);
         if (duel == null) {
-            duel = getPendingDuelFromPlayer1(winner);
+            duel = getPendingDuel(winner);
             if (duel == null) {
                 Logger.severe("No active duel!");
                 return;
@@ -99,7 +98,7 @@ public class DuelsManager {
         Economy econ = DuelsPlugin.getEconomy();
         econ.depositPlayer(winner, duel.getPrize() * 2);
         // end duel
-        activeDuels.remove(duel);
+        activeDuels.remove(duel.getUUID());
         World world = Bukkit.getWorld(FileManager.getEndWorldName());
         if (world == null) {
             Logger.severe("End world not found!");
@@ -109,48 +108,20 @@ public class DuelsManager {
         loser.teleportAsync(world.getSpawnLocation());
     }
 
-    private Duel getActiveDuelFromPlayer1(Player player) {
-        for (Duel duel : activeDuels) {
-            if (duel.getPlayer1().getUniqueId().equals(player.getUniqueId())) {
-                return duel;
-            }
-        }
-        return null;
+    private Duel getActiveDuel(Player player) {
+        return activeDuels.get(player.getUniqueId());
     }
 
-    private Duel getActiveDuelFromPlayer2(Player player) {
-        for (Duel duel : activeDuels) {
-            if (duel.getPlayer2().getUniqueId().equals(player.getUniqueId())) {
-                return duel;
-            }
-        }
-        return null;
+    private Duel getPendingDuel(Player player) {
+        return pendingDuels.get(player.getUniqueId());
     }
 
-    private Duel getPendingDuelFromPlayer1(Player player) {
-        for (Duel duel : pendingDuels) {
-            if (duel.getPlayer1().getUniqueId().equals(player.getUniqueId())) {
-                return duel;
-            }
-        }
-        return null;
-    }
-
-    private List<Duel> getPendingDuelFromPlayer2(Player player) {
-        List<Duel> duels = new ArrayList<>();
-        for (Duel duel : pendingDuels) {
-            if (duel.getPlayer2().getUniqueId().equals(player.getUniqueId())) {
-                duels.add(duel);
-            }
-        }
-        return duels;
-    }
-
-    public List<Duel> getPublicDuels() {
+    public List<Duel> getPublicDuels(Player except) {
         List<Duel> publicDuels = new ArrayList<>();
-        for (Duel duel : pendingDuels) {
+        for (Duel duel : pendingDuels.values()) {
             if (duel.getPlayer2() == null) {
-                publicDuels.add(duel);
+                if (!duel.getPlayer1().getUniqueId().equals(except.getUniqueId()))
+                    publicDuels.add(duel);
             }
         }
         return publicDuels;
@@ -158,7 +129,7 @@ public class DuelsManager {
 
     public List<Duel> getPrivateDuels() {
         List<Duel> privateDuels = new ArrayList<>();
-        for (Duel duel : pendingDuels) {
+        for (Duel duel : pendingDuels.values()) {
             if (duel.getPlayer2() != null) {
                 privateDuels.add(duel);
             }

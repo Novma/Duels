@@ -29,6 +29,7 @@ public class DuelsManager {
         }
         // add duel
         pendingDuels.put(player1.getUniqueId(), new Duel(player1, player2, prize));
+        Logger.debug("Added duel");
     }
 
     public void accept(Player player1, Player player2) {
@@ -70,7 +71,7 @@ public class DuelsManager {
             return;
         }
         // start duel
-        duel.setPlayer2(player2);
+        duel.accept(player2);
         pendingDuels.remove(player1.getUniqueId());
         activeDuels.put(player1.getUniqueId(), duel);
 
@@ -127,10 +128,31 @@ public class DuelsManager {
         return publicDuels;
     }
 
-    public List<Duel> getPrivateDuels() {
+    public void playerQuit(Player player) {
+        // end active
+        Duel duel = getActiveDuel(player);
+        if (duel != null) {
+            Player winner;
+            if (duel.getPlayer1().getUniqueId().equals(player.getUniqueId())) {
+                winner = duel.getPlayer2();
+            } else {
+                winner = duel.getPlayer1();
+            }
+            endDuel(winner, player);
+            Logger.debug("Duel quit active");
+        }
+        // remove pending
+        duel = getPendingDuel(player);
+        if (duel != null) {
+            pendingDuels.remove(player.getUniqueId());
+            Logger.debug("Duel quit pending");
+        }
+    }
+
+    public List<Duel> getPrivateDuels(Player player) {
         List<Duel> privateDuels = new ArrayList<>();
         for (Duel duel : pendingDuels.values()) {
-            if (duel.getPlayer2() != null) {
+            if (duel.getPlayer2().getUniqueId().equals(player.getUniqueId())) {
                 privateDuels.add(duel);
             }
         }

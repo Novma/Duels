@@ -1,6 +1,7 @@
 plugins {
     id("java-library")
     id("xyz.jpenilla.run-paper") version "3.0.2"
+    id("com.gradleup.shadow") version "9.0.2"
 }
 
 repositories {
@@ -10,11 +11,16 @@ repositories {
         name = "vaultAPI"
         url = uri("https://jitpack.io")
     }
+    maven {
+        name = "anvilGUI"
+        url = uri("https://mvn.wesjd.net/")
+    }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
+    implementation("net.wesjd:anvilgui:1.10.13-SNAPSHOT")
 }
 
 java {
@@ -22,6 +28,13 @@ java {
 }
 
 tasks {
+    shadowJar {
+        relocate (
+            "net.wesjd.anvilgui",
+            "novma.duels.libs.anvilgui"
+        )
+    }
+
     runServer {
         // Configure the Minecraft version for our task.
         // This is the only required configuration besides applying the plugin.

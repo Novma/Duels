@@ -4,7 +4,7 @@ import io.github.Novma.duels.command.CommandDuel;
 import io.github.Novma.duels.duel.DuelsManager;
 import io.github.Novma.duels.duel.SpawnManager;
 import io.github.Novma.duels.gui.GUIsManager;
-import io.github.Novma.duels.listener.DeathListener;
+import io.github.Novma.duels.listener.PlayerListener;
 import io.github.Novma.duels.listener.GUIListener;
 import io.github.Novma.duels.util.FileManager;
 import io.github.Novma.duels.util.Logger;
@@ -25,6 +25,9 @@ public final class DuelsPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+        saveResource("spawns.yml", false);
+
         instance = this;
         fileManager = new FileManager();
         Logger.init(this, FileManager.getDebug());
@@ -38,10 +41,10 @@ public final class DuelsPlugin extends JavaPlugin {
         duelsManager = new DuelsManager(spawnManager);
         guiManager = new GUIsManager(duelsManager);
 
-        getServer().getPluginManager().registerEvents(new DeathListener(spawnManager, duelsManager), this);
+        getServer().getPluginManager().registerEvents(new PlayerListener(spawnManager, duelsManager), this);
         getServer().getPluginManager().registerEvents(new GUIListener(guiManager), this);
 
-        Objects.requireNonNull(getCommand("duel")).setExecutor(new CommandDuel(guiManager));
+        Objects.requireNonNull(getCommand("duel")).setExecutor(new CommandDuel(guiManager, duelsManager));
     }
 
     @Override

@@ -10,6 +10,8 @@ public class DuelGUI {
     private Type type;
     private Inventory inventory;
     private List<Duel> duels;
+    private int prize = 0;
+    private String name = null;
 
     public DuelGUI() {
         page = 0;
@@ -46,6 +48,22 @@ public class DuelGUI {
 
     public void setDuels(List<Duel> duels) {
         this.duels = duels;
+    }
+
+    public int getPrize() {
+        return prize;
+    }
+
+    public void setPrize(int prize) {
+        this.prize = prize;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public enum Type {

@@ -23,7 +23,7 @@ public class FileManager {
     }
 
     public static String getWorldName() {
-        return config.getString("world");
+        return config.getString("world-name");
     }
     public static String getEndWorldName() {
         return config.getString("end-world-name");

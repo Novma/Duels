@@ -6,12 +6,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
-public class DeathListener implements Listener {
+public class PlayerListener implements Listener {
     private SpawnManager spawnManager;
     private DuelsManager duelsManager;
 
-    public DeathListener(SpawnManager spawnManager, DuelsManager duelsManager) {
+    public PlayerListener(SpawnManager spawnManager, DuelsManager duelsManager) {
         this.spawnManager = spawnManager;
         this.duelsManager = duelsManager;
     }
@@ -31,5 +32,10 @@ public class DeathListener implements Listener {
             return;
         }
         duelsManager.endDuel(killer, victim);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent e) {
+        duelsManager.playerQuit(e.getPlayer());
     }
 }

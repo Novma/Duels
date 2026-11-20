@@ -45,10 +45,6 @@ public class Duel {
         return player2;
     }
 
-    public void setPlayer2(Player player2) {
-        this.player2 = player2;
-    }
-
     public int getPrize() {
         return prize;
     }
